@@ -21,7 +21,7 @@ var modelCount = document.getElementById("model-count");
 
 var selectedModel = "";
 var selectedName = "";
-var activeRuntime = "npx";
+var activeRuntime = "npm";
 var allModels = [];
 var fetchRetryCount = 0;
 var MAX_RETRIES = 2;
@@ -393,21 +393,29 @@ function buildCmds(rt, model, apiKey) {
   var iDesc = "";
 
   switch (rt) {
+    case "npm":
+      install = "npm install -g claude-nim";
+      var partsN = ["claude-nim"];
+      if (model) partsN.push("--model " + model);
+      if (apiKey) partsN.push("--api-key " + apiKey);
+      configured = partsN.join(" ");
+      iDesc = "Installs globally so you can type 'claude-nim' anywhere in your terminal";
+      break;
     case "npx":
       install = "npx --yes claude-nim";
       var parts = ["npx --yes claude-nim"];
       if (model) parts.push("--model " + model);
       if (apiKey) parts.push("--api-key " + apiKey);
       configured = parts.join(" ");
-      iDesc = "Auto-installs via npm and launches Claude Code";
+      iDesc = "Downloads and runs temporarily without installing globally";
       break;
     case "bun":
-      install = "bunx claude-nim";
-      var parts2 = ["bunx claude-nim"];
+      install = "bun add -g claude-nim";
+      var parts2 = ["claude-nim"];
       if (model) parts2.push("--model " + model);
       if (apiKey) parts2.push("--api-key " + apiKey);
       configured = parts2.join(" ");
-      iDesc = "Runs via Bun — faster cold starts, no '--yes' needed";
+      iDesc = "Installs globally via Bun for faster cold starts";
       break;
     case "curl":
       install = "curl -fsSL " + SCRIPT_BASE + "/install.sh | bash";
@@ -417,7 +425,7 @@ function buildCmds(rt, model, apiKey) {
       configured = args.length
         ? "curl -fsSL " + SCRIPT_BASE + "/install.sh | bash -s -- " + args.join(" ")
         : install;
-      iDesc = "Pipe to bash — auto-detects Bun or Node on your system";
+      iDesc = "Universal Bash installer — auto-detects Node/Bun and adds to PATH";
       break;
     case "iex":
       install = "iex (irm " + SCRIPT_BASE + "/install.ps1)";
@@ -429,7 +437,12 @@ function buildCmds(rt, model, apiKey) {
       } else {
         configured = install;
       }
-      iDesc = "PowerShell one-liner — works in Windows Terminal, VS Code, etc.";
+      iDesc = "PowerShell installer — binds the 'claude-nim' command natively in Windows";
+      break;
+    case "vscode":
+      install = "Download from VS Code Marketplace";
+      configured = "Press Ctrl+Shift+P and search 'Claude-NIM'";
+      iDesc = "Search 'Claude-NIM' in your VS Code Extensions tab to install the GUI extension!";
       break;
   }
 

@@ -296,9 +296,14 @@ Description:
   const port = await findAvailablePort(cliPort);
   console.log(`🚀 Starting proxy server on local port ${port}...`);
 
-  // 4. Start Server
+  // 4. Start Server — default to a known working NIM model
+  const resolvedModel = model || "deepseek-ai/deepseek-r1";
+  if (!model) {
+    console.log(`  No model specified, defaulting to ${resolvedModel}`);
+    console.log(`  Use --model <name> to choose a different model\n`);
+  }
   try {
-    startProxyServer(port, apiKey, model);
+    startProxyServer(port, apiKey, resolvedModel);
   } catch (err) {
     console.error("❌ Failed to start proxy server:", err);
     process.exit(1);
@@ -317,7 +322,7 @@ Description:
 
   const cmd = process.platform === "win32" ? "claude.cmd" : "claude";
 
-  claudeProcess = child_process.spawn(cmd, [], {
+  claudeProcess = child_process.spawn(cmd, ["--model", "NVIDIA-NIM-Proxy"], {
     stdio: "inherit",
     shell: true,
     env: {

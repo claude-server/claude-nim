@@ -205,7 +205,9 @@ async function handleMessagesStream(
   apiKey: string,
   defaultModel?: string,
 ): Promise<void> {
-  if (defaultModel && !body.model) {
+  // Always override model when a default is configured — Claude Code sends
+  // "claude-opus-4-8" which doesn't exist on NIM.
+  if (defaultModel) {
     body.model = defaultModel;
   }
 
@@ -515,7 +517,8 @@ async function handleMessagesNonStream(
   apiKey: string,
   defaultModel?: string,
 ): Promise<void> {
-  if (defaultModel && !body.model) {
+  // Always override model when a default is configured
+  if (defaultModel) {
     body.model = defaultModel;
   }
 

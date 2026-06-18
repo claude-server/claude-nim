@@ -383,7 +383,12 @@ function loadModels() {
       })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        if (d && d.model && sel) sel.value = d.model;
+        if (d && d.model && sel) {
+          sel.value = d.model;
+          // Update active model display
+          var am = $("active-model");
+          if (am) am.textContent = d.model;
+        }
       })
       .catch(function () {
         // Proxy isn't running — keep the embedded fallback list visible.
@@ -480,8 +485,11 @@ if (btnApply) {
     })
       .then((r) => r.json())
       .then((d) => {
-        if (d.ok) addLog("Model set: " + model, "ok");
-        else addLog("Failed to set model: " + (d.error || "unknown"), "err");
+        if (d.ok) {
+          addLog("Model set: " + model, "ok");
+          var am = $("active-model");
+          if (am) am.textContent = model;
+        } else addLog("Failed to set model: " + (d.error || "unknown"), "err");
       })
       .catch(() => addLog("Failed to set model", "err"))
       .finally(() => {

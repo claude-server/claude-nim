@@ -350,8 +350,28 @@ Description:
     process.exit(1);
   }
 
-  // 5. Spawn Claude Code
-  console.log("✨ Launching Claude Code terminal...\n");
+  // 5. Show dashboard link
+  const dashboardUrl = "http://127.0.0.1:" + port + "/dashboard";
+  console.log("  Dashboard: " + dashboardUrl);
+  console.log();
+
+  // Open dashboard in default browser
+  try {
+    const openCmd =
+      process.platform === "win32"
+        ? "start " + dashboardUrl
+        : process.platform === "darwin"
+          ? "open " + dashboardUrl
+          : "xdg-open " + dashboardUrl;
+    child_process.exec(openCmd, () => {
+      /* ignore errors if no browser */
+    });
+  } catch {
+    // ignore
+  }
+
+  // 6. Spawn Claude Code
+  console.log("Launching Claude Code terminal...\n");
 
   const envOptions = { ...process.env };
   // Prevent Claude Code warning about multiple auth methods

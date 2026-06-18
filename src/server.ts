@@ -205,6 +205,13 @@ async function handleMessagesStream(
   apiKey: string,
   defaultModel?: string,
 ): Promise<void> {
+  // Map "NVIDIA-NIM-Proxy" (provider name from .claude/settings.json) to the
+  // actual NIM model. Claude Code sends this as the model name when the user
+  // hasn't explicitly picked a NIM model via /model.
+  if (!body.model || body.model === "NVIDIA-NIM-Proxy") {
+    body.model = defaultModel || getCurrentModel() || "";
+  }
+
   // Always override model when a default is configured — Claude Code sends
   // "claude-opus-4-8" which doesn't exist on NIM.
   if (defaultModel) {
@@ -517,6 +524,11 @@ async function handleMessagesNonStream(
   apiKey: string,
   defaultModel?: string,
 ): Promise<void> {
+  // Map "NVIDIA-NIM-Proxy" to actual NIM model
+  if (!body.model || body.model === "NVIDIA-NIM-Proxy") {
+    body.model = defaultModel || getCurrentModel() || "";
+  }
+
   // Always override model when a default is configured
   if (defaultModel) {
     body.model = defaultModel;
@@ -942,6 +954,19 @@ export function startProxyServer(
             display_name: m.displayName,
             created_at: new Date(Date.now() - 86400000).toISOString(),
           }));
+
+          // Add the proxy model entry so Claude Code accepts "NVIDIA-NIM-Proxy"
+          // from .claude/settings.json. This maps to whatever NIM model is active.
+          const currentNim = activeDefaultModel || getCurrentModel() || normalized[0]?.id || "";
+          if (currentNim) {
+            data.unshift({
+              type: "model" as const,
+              id: "NVIDIA-NIM-Proxy",
+              display_name: `NVIDIA NIM (${currentNim})`,
+              created_at: new Date(Date.now() - 86400000).toISOString(),
+            });
+          }
+
           const responseData = {
             data,
             has_more: false,

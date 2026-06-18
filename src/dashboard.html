@@ -66,6 +66,14 @@ h1{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;letter-sp
 <div class="wrap">
   <h1>Claude-NIM Proxy Dashboard</h1>
 
+  <!-- Active Model Status -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);font-size:12px">
+    <span style="color:var(--dim);text-transform:uppercase;font-size:10px">Active Model</span>
+    <span id="active-model" style="color:var(--text);font-weight:600">loading...</span>
+    <span style="flex:1"></span>
+    <span id="conn-status" style="color:var(--dim);font-size:11px">Connecting...</span>
+  </div>
+
   <!-- Header with icons -->
   <div class="hdr">
     <div class="icon">

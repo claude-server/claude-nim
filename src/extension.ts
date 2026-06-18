@@ -31,6 +31,50 @@ import { buildCustomModelOptions } from "./model-switch";
 
 let _statusBar: StatusBarManager | null = null;
 
+async function ensureCliInstalled(): Promise<boolean> {
+  const { execSync } = require("child_process");
+  try {
+    execSync("claude-nim --version", { stdio: "ignore", timeout: 5000 });
+    return true;
+  } catch {
+    // Not installed, install it
+    return new Promise<boolean>((resolve) => {
+      vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: "Claude-NIM Proxy",
+          cancellable: false,
+        },
+        async (progress) => {
+          progress.report({ message: "Installing CLI globally..." });
+          try {
+            const { exec } = require("child_process");
+            await new Promise<void>((res, rej) => {
+              exec(
+                "npm install -g claude-nim",
+                { timeout: 120000 },
+                (err: Error | null) => {
+                  if (err) rej(err);
+                  else res();
+                },
+              );
+            });
+            vscode.window.showInformationMessage(
+              "Claude-NIM CLI installed successfully.",
+            );
+            resolve(true);
+          } catch (e) {
+            vscode.window.showErrorMessage(
+              "Failed to install Claude-NIM CLI. Install manually: npm install -g claude-nim",
+            );
+            resolve(false);
+          }
+        },
+      );
+    });
+  }
+}
+
 async function tryStartProxy(
   context: vscode.ExtensionContext,
   showMessage = false,
@@ -91,6 +135,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   _statusBar = new StatusBarManager();
   context.subscriptions.push(_statusBar);
+
+  // Auto-install CLI if not present
+  await ensureCliInstalled();
 
   const debugEnabled = context.globalState.get<boolean>(DEBUG_STATE_KEY, false);
   process.env[DEBUG_ENV_VAR] = debugEnabled ? "1" : "0";

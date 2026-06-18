@@ -304,18 +304,7 @@ Description:
       const rawModels = await fetchModels(apiKey);
       if (rawModels && rawModels.length > 0) {
         const models = normalizeNvidiaModels(rawModels);
-        const popular = models.filter(
-          (m) =>
-            m.id.includes("deepseek") ||
-            m.id.includes("llama") ||
-            m.id.includes("mistral") ||
-            m.id.includes("qwen") ||
-            m.id.includes("nemotron") ||
-            m.id.includes("gemma") ||
-            m.id.includes("phi") ||
-            m.id.includes("kimi"),
-        );
-        const display = popular.length > 0 ? popular : models.slice(0, 20);
+        const display = models.slice(0, 50);
 
         console.log("  Available models:\n");
         display.forEach((m, i) => {

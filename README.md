@@ -9,11 +9,11 @@
 
 # Claude-NIM Proxy
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![VS Code](https://img.shields.io/badge/VS%20Code-1.80+-blue.svg)](https://code.visualstudio.com/)
-[![npm version](https://img.shields.io/npm/v/claude-nim.svg)](https://www.npmjs.com/package/claude-nim)
-[![npm downloads](https://img.shields.io/npm/dm/claude-nim.svg)](https://www.npmjs.com/package/claude-nim)
-[![GitHub](https://img.shields.io/badge/GitHub-claude--nim-181717.svg)](https://github.com/claude-nim/claude-nim)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+[![VS Code](https://img.shields.io/badge/VS%20Code-1.80+-blue)](https://code.visualstudio.com/)
+[![npm version](https://img.shields.io/npm/v/claude-nim)](https://www.npmjs.com/package/claude-nim)
+[![npm downloads](https://img.shields.io/npm/dm/claude-nim)](https://www.npmjs.com/package/claude-nim)
+[![GitHub](https://img.shields.io/badge/GitHub-claude--nim-181717)](https://github.com/claude-nim/claude-nim)
 
 A VS Code extension that lets you use **NVIDIA NIM models** with **Claude Code** (and any Anthropic Messages API client).
 

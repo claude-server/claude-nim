@@ -3,6 +3,10 @@
   Licensed under the MIT License - see LICENSE for details
 -->
 
+<p align="center">
+  <img src="images/Banner.jpeg" alt="Claude-NIM Proxy" width="100%">
+</p>
+
 # Claude-NIM Proxy
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

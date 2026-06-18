@@ -286,6 +286,7 @@ export async function activate(context: vscode.ExtensionContext) {
           ANTHROPIC_API_KEY: apiKey,
           CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY: "1",
           ANTHROPIC_CUSTOM_MODEL_OPTION: customModelOption,
+          ANTHROPIC_AUTH_TOKEN: "",
         },
       });
       terminal.show();

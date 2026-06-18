@@ -46,6 +46,91 @@ let modelsCacheTTLMs: number = 5 * 60 * 1000;
 let requestTimeoutMs: number = 120_000;
 let activeDefaultModel: string | undefined = undefined;
 
+// ============================================================================
+// Fallback model response — used when NIM API is unreachable
+// ============================================================================
+
+const FALLBACK_MODEL_IDS = [
+  "deepseek-ai/deepseek-r1",
+  "deepseek-ai/deepseek-v4-flash",
+  "deepseek-ai/deepseek-v4-pro",
+  "meta/llama-3.3-70b-instruct",
+  "meta/llama-4-maverick-17b-128e-instruct",
+  "mistralai/mistral-large-3-675b-instruct-2512",
+  "qwen/qwen3.5-397b-a17b",
+  "google/gemma-4-31b-it",
+  "microsoft/phi-4-mini-instruct",
+  "minimaxai/minimax-m3",
+  "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+];
+
+function buildFallbackModelsResponse() {
+  const currentNim =
+    activeDefaultModel || getCurrentModel() || FALLBACK_MODEL_IDS[0];
+  const data: Array<{
+    type: "model";
+    id: string;
+    display_name: string;
+    created_at: string;
+  }> = [];
+
+  // Always add "NVIDIA-NIM-Proxy" first so Claude Code accepts the name
+  data.push({
+    type: "model",
+    id: "NVIDIA-NIM-Proxy",
+    display_name: `NVIDIA NIM (${currentNim})`,
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  });
+
+  // Add common NIM models as fallbacks
+  for (const id of FALLBACK_MODEL_IDS) {
+    data.push({
+      type: "model",
+      id,
+      display_name: id.split("/").pop()!,
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+    });
+  }
+
+  return { data, has_more: false, first_id: data[0]?.id ?? "", last_id: data[data.length - 1]?.id ?? "" };
+}
+
+// ============================================================================
+// .claude/settings.json rewrite — prevent "model not found" on startup
+// ============================================================================
+
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as os from "node:os";
+
+function rewriteClaudeSettingsModel(nimModelId: string): void {
+  try {
+    const settingsPath = path.join(
+      os.homedir(),
+      ".claude",
+      "settings.json",
+    );
+    if (!fs.existsSync(settingsPath)) return;
+
+    const raw = fs.readFileSync(settingsPath, "utf8");
+    const settings = JSON.parse(raw) as Record<string, unknown>;
+
+    // Only rewrite if the model is "NVIDIA-NIM-Proxy" (our provider name)
+    // — replace it with the actual NIM model ID so Claude Code can validate it.
+    if (settings.model === "NVIDIA-NIM-Proxy" || !settings.model) {
+      settings.model = nimModelId;
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), "utf8");
+      debugLog(
+        "proxy",
+        `Rewrote .claude/settings.json model: "NVIDIA-NIM-Proxy" → "${nimModelId}"`,
+      );
+    }
+  } catch {
+    // Non-fatal — just log
+    debugLog("proxy", "Could not rewrite .claude/settings.json model");
+  }
+}
+
 export function setShowReasoning(enabled: boolean) {
   showReasoningEnabled = enabled;
 }
@@ -939,11 +1024,14 @@ export function startProxyServer(
       )
         .then((rawModels) => {
           if (!rawModels) {
-            sendError(
-              res,
-              502,
-              "api_error",
-              "Failed to fetch models from NVIDIA NIM",
+            // Return a fallback list so Claude Code never sees a 502 for model
+            // validation. Always include "NVIDIA-NIM-Proxy" so the user's
+            // .claude/settings.json model name is accepted.
+            const fallback = buildFallbackModelsResponse();
+            sendJson(res, 200, fallback);
+            debugLog(
+              "proxy",
+              "NIM models unavailable, returning fallback list.",
             );
             return;
           }
@@ -985,11 +1073,13 @@ export function startProxyServer(
           );
         })
         .catch((err) => {
-          sendError(
-            res,
-            500,
-            "api_error",
-            err instanceof Error ? err.message : String(err),
+          // Even on error, return a fallback so Claude Code can still validate
+          // "NVIDIA-NIM-Proxy" as a model name.
+          const fallback = buildFallbackModelsResponse();
+          sendJson(res, 200, fallback);
+          debugLog(
+            "proxy",
+            `Model fetch failed (${err instanceof Error ? err.message : String(err)}), returning fallback.`,
           );
         });
       return;
@@ -997,16 +1087,81 @@ export function startProxyServer(
 
     // --- New API routes ---
 
-    // GET /api/models — cached model list as JSON array
+    // GET /api/models — model list as JSON array (uses cache or fetches fresh)
     if (url === "/api/models" && method === "GET") {
-      if (modelsCache && modelsCache.apiKey === activeApiKey) {
+      if (!activeApiKey) {
+        sendError(res, 401, "authentication_error", "No API key configured");
+        return;
+      }
+      // Serve from cache if still fresh
+      if (
+        modelsCache &&
+        modelsCache.apiKey === activeApiKey &&
+        Date.now() - modelsCache.timestamp < modelsCacheTTLMs
+      ) {
         const data = modelsCache.data as {
           data: Array<{ id: string; display_name: string }>;
         };
         sendJson(res, 200, data.data);
         return;
       }
-      sendJson(res, 503, { error: "Models not loaded yet" });
+      // Fetch fresh models when cache is missing or stale
+      fetchModels(
+        activeApiKey,
+        undefined,
+        "claude-nim-proxy/1.0",
+        requestTimeoutMs,
+      )
+        .then((rawModels) => {
+          if (!rawModels) {
+            sendError(
+              res,
+              502,
+              "api_error",
+              "Failed to fetch models from NVIDIA NIM",
+            );
+            return;
+          }
+          const normalized = normalizeNvidiaModels(rawModels);
+          const data = normalized.map((m) => ({
+            type: "model" as const,
+            id: m.id,
+            display_name: m.displayName,
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+          }));
+
+          const currentNim =
+            activeDefaultModel || getCurrentModel() || normalized[0]?.id || "";
+          if (currentNim) {
+            data.unshift({
+              type: "model" as const,
+              id: "NVIDIA-NIM-Proxy",
+              display_name: `NVIDIA NIM (${currentNim})`,
+              created_at: new Date(Date.now() - 86400000).toISOString(),
+            });
+          }
+
+          const responseData = {
+            data,
+            has_more: false,
+            first_id: data[0]?.id ?? "",
+            last_id: data[data.length - 1]?.id ?? "",
+          };
+          modelsCache = {
+            data: responseData,
+            timestamp: Date.now(),
+            apiKey: activeApiKey!,
+          };
+          sendJson(res, 200, data);
+        })
+        .catch((err) => {
+          sendError(
+            res,
+            500,
+            "api_error",
+            err instanceof Error ? err.message : String(err),
+          );
+        });
       return;
     }
 
@@ -1115,6 +1270,14 @@ export function startProxyServer(
     );
     debugLog("proxy", `Server started on 127.0.0.1:${port}`);
     onStatus?.(true, port);
+
+    // Rewrite .claude/settings.json to use the real NIM model ID instead of
+    // "NVIDIA-NIM-Proxy" (the provider name). This prevents the "model not
+    // found" error in Claude Code on startup.
+    const modelForSettings = activeDefaultModel || getCurrentModel() || FALLBACK_MODEL_IDS[0];
+    if (modelForSettings) {
+      rewriteClaudeSettingsModel(modelForSettings);
+    }
   });
 
   // Track connected sockets so we can force-close them on stop

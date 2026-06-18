@@ -316,13 +316,22 @@ Description:
   // Prevent Claude Code warning about multiple auth methods
   delete envOptions.ANTHROPIC_AUTH_TOKEN;
 
-  // Provide a clean string for the custom model.
-  // Claude Code CLI does not parse this as JSON, it uses it literally.
-  const customModelOption = "NVIDIA-NIM-Proxy";
+  // Fetch NIM models for ANTHROPIC_CUSTOM_MODEL_OPTION
+  let customModelOption = "[]";
+  try {
+    const rawModels = await fetchModels(apiKey);
+    if (rawModels) {
+      const models = normalizeNvidiaModels(rawModels);
+      customModelOption = buildCustomModelOptions(models);
+      console.log(`  Found ${models.length} NIM models for Claude Code picker.`);
+    }
+  } catch {
+    console.log("  Could not fetch NIM models. Custom model picker unavailable.");
+  }
 
   const cmd = process.platform === "win32" ? "claude.cmd" : "claude";
 
-  claudeProcess = child_process.spawn(cmd, ["--model", "NVIDIA-NIM-Proxy"], {
+  claudeProcess = child_process.spawn(cmd, [], {
     stdio: "inherit",
     shell: true,
     env: {

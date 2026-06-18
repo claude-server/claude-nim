@@ -110,11 +110,6 @@
       }
     }
   },
-  "files": [
-    "out",
-    "README.md",
-    "package.json"
-  ],
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "precompile": "node scripts/inline-assets.js",

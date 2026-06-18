@@ -311,12 +311,9 @@ Description:
   // Prevent Claude Code warning about multiple auth methods
   delete envOptions.ANTHROPIC_AUTH_TOKEN;
 
-  // Provide a single, clean custom option for Claude's internal picker.
-  // The actual model selection is handled by our proxy's /model command or the web dashboard.
-  const customModelOption = JSON.stringify({
-    value: "nvidia-nim",
-    label: "NVIDIA NIM Proxy (Select via dashboard or /model chat command)",
-  });
+  // Provide a clean string for the custom model.
+  // Claude Code CLI does not parse this as JSON, it uses it literally.
+  const customModelOption = "NVIDIA-NIM-Proxy";
 
   const cmd = process.platform === "win32" ? "claude.cmd" : "claude";
 

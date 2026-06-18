@@ -135,10 +135,12 @@ interface ModelOption {
 export function buildCustomModelOptions(
   models: Array<{ id: string; displayName: string }>,
 ): string {
-  const options: ModelOption[] = models.map((m) => ({
+  // Limit to 30 most popular models to avoid overwhelming Claude Code's picker
+  const limited = models.slice(0, 30);
+  const options: ModelOption[] = limited.map((m) => ({
     value: m.id,
     label: m.displayName,
-    description: "via NVIDIA NIM",
+    description: "NIM",
   }));
   return JSON.stringify(options);
 }

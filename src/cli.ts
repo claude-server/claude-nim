@@ -109,29 +109,14 @@ function promptForInput(
   hidden: boolean = false,
 ): Promise<string> {
   return new Promise((resolve) => {
-    let muted = false;
-
-    const mutableStdout = new Writable({
-      write: function (chunk, encoding, callback) {
-        if (!muted) {
-          process.stdout.write(chunk, encoding);
-        }
-        callback();
-      },
-    });
-
     const rl = readline.createInterface({
       input: process.stdin,
-      output: mutableStdout,
-      terminal: true,
+      output: process.stdout,
     });
 
-    process.stdout.write(question);
-    muted = hidden;
-
-    rl.question("", (answer) => {
+    // We disable the 'hidden' requirement for now to ensure it works reliably across all Windows terminals.
+    rl.question(question, (answer) => {
       rl.close();
-      if (hidden) console.log();
       resolve(answer.trim());
     });
   });
@@ -322,22 +307,16 @@ Description:
   // 5. Spawn Claude Code
   console.log("✨ Launching Claude Code terminal...\n");
 
-  // Fetch NIM models for ANTHROPIC_CUSTOM_MODEL_OPTION
-  let customModelOption = "[]";
-  try {
-    const rawModels = await fetchModels(apiKey);
-    if (rawModels) {
-      const models = normalizeNvidiaModels(rawModels);
-      customModelOption = buildCustomModelOptions(models);
-      console.log(
-        `  Found ${models.length} NIM models for Claude Code picker.`,
-      );
-    }
-  } catch {
-    console.log(
-      "  ⚠ Could not fetch NIM models. Custom model picker unavailable.",
-    );
-  }
+  const envOptions = { ...process.env };
+  // Prevent Claude Code warning about multiple auth methods
+  delete envOptions.ANTHROPIC_AUTH_TOKEN;
+
+  // Provide a single, clean custom option for Claude's internal picker.
+  // The actual model selection is handled by our proxy's /model command or the web dashboard.
+  const customModelOption = JSON.stringify({
+    value: "nvidia-nim",
+    label: "NVIDIA NIM Proxy (Select via dashboard or /model chat command)",
+  });
 
   const cmd = process.platform === "win32" ? "claude.cmd" : "claude";
 
@@ -345,7 +324,7 @@ Description:
     stdio: "inherit",
     shell: true,
     env: {
-      ...process.env,
+      ...envOptions,
       ANTHROPIC_BASE_URL: `http://127.0.0.1:${port}`,
       ANTHROPIC_API_KEY: apiKey,
       CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY: "1",

@@ -625,17 +625,23 @@ Options:
   if (serveOnly) {
     const apiKey = await getOrPromptApiKey(cliApiKey);
     const port = await findAvailablePort(cliPort);
-    const resolvedModel = model || getCurrentModel() || "meta/llama-3.3-70b-instruct";
+    const resolvedModel =
+      model || getCurrentModel() || "meta/llama-3.3-70b-instruct";
     try {
       await startProxyServer(port, apiKey, resolvedModel);
-      console.log(`\n  ${accent.bold("Proxy server started on port")} ${chalk.dim(port.toString())}\n`);
+      console.log(
+        `\n  ${accent.bold("Proxy server started on port")} ${chalk.dim(port.toString())}\n`,
+      );
     } catch (err) {
       console.error("Failed to start proxy server:", err);
       process.exit(1);
     }
     // Wait for signal to stop
     await new Promise<void>((resolve) => {
-      const onSignal = () => { cleanupAndExit(); resolve(); };
+      const onSignal = () => {
+        cleanupAndExit();
+        resolve();
+      };
       process.on("SIGINT", onSignal);
       process.on("SIGTERM", onSignal);
     });

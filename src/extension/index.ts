@@ -44,9 +44,7 @@ let _proxyPort = 3456;
 function findBun(): string | null {
   try {
     const which = process.platform === "win32" ? "where" : "which";
-    return execSync(`${which} bun`, { encoding: "utf8" })
-      .trim()
-      .split("\n")[0];
+    return execSync(`${which} bun`, { encoding: "utf8" }).trim().split("\n")[0];
   } catch {
     return null; // will fall back to node — CLI banner auto-re-execs with bun
   }
@@ -64,14 +62,11 @@ async function waitForHealth(
   while (Date.now() - start < timeoutMs) {
     try {
       await new Promise<void>((resolve, reject) => {
-        const req = http.get(
-          `http://127.0.0.1:${port}/health`,
-          (res) => {
-            res.resume();
-            if (res.statusCode === 200) resolve();
-            else reject(new Error(`status ${res.statusCode}`));
-          },
-        );
+        const req = http.get(`http://127.0.0.1:${port}/health`, (res) => {
+          res.resume();
+          if (res.statusCode === 200) resolve();
+          else reject(new Error(`status ${res.statusCode}`));
+        });
         req.on("error", reject);
         req.setTimeout(2000, () => {
           req.destroy();
@@ -114,11 +109,7 @@ function startBunProxy(
     }
 
     const bunPath = findBun();
-    const cliPath = path.join(
-      _context!.extensionPath,
-      "out",
-      "cli.js",
-    );
+    const cliPath = path.join(_context!.extensionPath, "out", "cli.js");
     const args = [
       cliPath,
       "--serve-only",

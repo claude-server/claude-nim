@@ -201,9 +201,7 @@ async function handleMessages(
 
   const openaiResult = (await nimResponse.json()) as Record<string, unknown>;
   proxyState.activeStreams.delete(streamAbortController);
-  const usage = openaiResult.usage as
-    | { prompt_tokens?: number; completion_tokens?: number }
-    | undefined;
+  const usage = openaiResult.usage as { prompt_tokens?: number; completion_tokens?: number } | undefined;
   if (usage) {
     addSessionTokens(
       (usage.prompt_tokens ?? 0) + (usage.completion_tokens ?? 0),

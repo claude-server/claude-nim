@@ -508,9 +508,7 @@ export function toAnthropicResponse(
     }
   }
 
-  const usage = openaiBody.usage as
-    | { prompt_tokens?: number; completion_tokens?: number }
-    | undefined;
+  const usage = openaiBody.usage as { prompt_tokens?: number; completion_tokens?: number } | undefined;
 
   return {
     id: `msg_${Date.now()}`,
@@ -619,9 +617,7 @@ export async function toAnthropicStream(
           continue;
         }
 
-        const chunkUsage = chunk.usage as
-          | { prompt_tokens?: number; completion_tokens?: number }
-          | undefined;
+        const chunkUsage = chunk.usage as { prompt_tokens?: number; completion_tokens?: number } | undefined;
         if (chunkUsage?.prompt_tokens !== undefined)
           inputTokens = chunkUsage.prompt_tokens;
         if (chunkUsage?.completion_tokens !== undefined)

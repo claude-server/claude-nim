@@ -1,12 +1,6 @@
 // Copyright (c) 2026 Rithika Liyanage (https://github.com/k-rithik04)
 // Licensed under the MIT License - see LICENSE for details
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | Json[]
-  | { [k: string]: Json };
+export type Json = string | number | boolean | null | Json[] | { [k: string]: Json };
 export type JsonObject = { [k: string]: Json };
 
 export interface OcGoContentPart {
@@ -48,11 +42,7 @@ export interface OcGoChatRequest {
   frequency_penalty?: number;
   presence_penalty?: number;
   tools?: OcGoTool[];
-  tool_choice?:
-    | "auto"
-    | "none"
-    | "required"
-    | { type: string; function: { name: string } };
+  tool_choice?: "auto" | "none" | "required" | { type: string; function: { name: string } };
 }
 
 export interface OcGoStreamChoice {

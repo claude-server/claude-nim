@@ -200,8 +200,8 @@ async function ensureLazyInit(): Promise<void> {
   );
   setShowReasoning(showReasoning);
 
-  // Auto-install CLI if not present
-  await ensureCliInstalled(ctx.extensionPath);
+  // Health check: verify Bun, CLI, and fix any issues
+  await postInstallHealthCheck(ctx.extensionPath);
 
   // Register installation and check for updates
   const ghToken = await ctx.secrets.get("nvidia-nim.githubToken");
@@ -219,48 +219,130 @@ async function ensureLazyInit(): Promise<void> {
   await tryStartProxy(ctx);
 }
 
-async function ensureCliInstalled(extensionPath: string): Promise<boolean> {
-  try {
-    execSync("claude-nim --version", { stdio: "ignore", timeout: 5000 });
-    return true;
-  } catch {
-    return new Promise<boolean>((resolve) => {
-      vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title: "Claude-NIM Proxy",
-          cancellable: false,
-        },
-        async (progress) => {
-          progress.report({ message: "Installing CLI globally..." });
-          try {
-            await new Promise<void>((res, rej) => {
-              exec(
-                `npm install -g "${extensionPath}"`,
-                { timeout: 120000 },
-                (err: Error | null) => {
-                  if (err) rej(err);
-                  else res();
-                },
-              );
+function execPromise(
+  cmd: string,
+  opts?: { timeout?: number },
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    exec(
+      cmd,
+      { encoding: "utf8", timeout: opts?.timeout ?? 30_000 },
+      (err, stdout) => {
+        if (err) reject(err);
+        else resolve(stdout.trim());
+      },
+    );
+  });
+}
+
+async function postInstallHealthCheck(extensionPath: string): Promise<void> {
+  const issues: string[] = [];
+  const fixed: string[] = [];
+
+  await vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: "Claude-NIM Proxy",
+      cancellable: false,
+    },
+    async (progress) => {
+      // ── Step 1: Check Bun ──────────────────────────────────────────────
+      progress.report({ message: "Checking Bun runtime..." });
+      let bunOk = false;
+      try {
+        const which = process.platform === "win32" ? "where" : "which";
+        await execPromise(`${which} bun`);
+        bunOk = true;
+      } catch {
+        issues.push("Bun runtime not found");
+      }
+
+      if (!bunOk) {
+        progress.report({ message: "Installing Bun runtime..." });
+        try {
+          if (process.platform === "win32") {
+            await execPromise('powershell -c "irm bun.sh/install.ps1 | iex"', {
+              timeout: 120_000,
             });
-            vscode.window.showInformationMessage(
-              "Claude-NIM CLI installed globally. Run 'claude-nim' from any terminal.",
-            );
-            resolve(true);
-          } catch {
-            vscode.window.showErrorMessage(
-              "Failed to install Claude-NIM CLI. " +
-                'Run this command manually: npm install -g "' +
-                extensionPath +
-                '"',
-            );
-            resolve(false);
+          } else {
+            await execPromise("curl -fsSL https://bun.sh/install | bash", {
+              timeout: 120_000,
+            });
           }
-        },
-      );
-    });
-  }
+          // Verify
+          try {
+            const which = process.platform === "win32" ? "where" : "which";
+            await execPromise(`${which} bun`);
+            fixed.push("Bun runtime installed");
+          } catch {
+            issues.push(
+              "Bun installed but not found in PATH — add ~/.bun/bin to PATH",
+            );
+          }
+        } catch (err) {
+          issues.push(
+            `Failed to install Bun: ${err instanceof Error ? err.message : err}`,
+          );
+        }
+      }
+
+      // ── Step 2: Check CLI ──────────────────────────────────────────────
+      progress.report({ message: "Checking Claude-NIM CLI..." });
+      let cliOk = false;
+      try {
+        await execPromise("claude-nim --version", { timeout: 5000 });
+        cliOk = true;
+      } catch {
+        issues.push("Claude-NIM CLI not installed globally");
+      }
+
+      if (!cliOk) {
+        progress.report({ message: "Installing Claude-NIM CLI globally..." });
+        try {
+          await execPromise(`npm install -g "${extensionPath}"`, {
+            timeout: 120_000,
+          });
+          // Verify
+          try {
+            await execPromise("claude-nim --version", { timeout: 5000 });
+            fixed.push("Claude-NIM CLI installed");
+          } catch {
+            issues.push("CLI installed but 'claude-nim' not found in PATH");
+          }
+        } catch (err) {
+          issues.push(
+            `Failed to install CLI: ${err instanceof Error ? err.message : err}`,
+          );
+        }
+      }
+
+      // ── Step 3: Verify CLI works end-to-end ────────────────────────────
+      if (cliOk || fixed.some((f) => f.includes("CLI"))) {
+        progress.report({ message: "Verifying CLI works..." });
+        try {
+          const version = await execPromise("claude-nim --version", {
+            timeout: 5000,
+          });
+          debugLog("healthCheck", `CLI version: ${version}`);
+        } catch {
+          issues.push("CLI installed but failed to run");
+        }
+      }
+
+      // ── Report ─────────────────────────────────────────────────────────
+      if (issues.length === 0) {
+        vscode.window.showInformationMessage(
+          `Claude-NIM: Successfully installed! ${fixed.length > 0 ? "(" + fixed.join(", ") + ")" : ""}`,
+        );
+      } else {
+        const msg =
+          `Claude-NIM install issues:\n` +
+          issues.map((i) => `  - ${i}`).join("\n") +
+          (fixed.length > 0 ? `\nFixed: ${fixed.join(", ")}` : "");
+        vscode.window.showWarningMessage(msg);
+      }
+    },
+  );
 }
 
 function syncModelToClaudeSettings(modelId: string): void {
@@ -292,12 +374,25 @@ async function tryStartProxy(
 
   const apiKey = await context.secrets.get(SECRET_STORAGE_KEY);
   if (!apiKey) {
-    if (showMessage) {
-      vscode.window.showErrorMessage(
-        "Please configure your NVIDIA NIM API key first.",
-      );
+    // Prompt for API key on first use
+    const newKey = await vscode.window.showInputBox({
+      title: `${PROVIDER_DISPLAY_NAME} API Key`,
+      prompt: "Enter your NVIDIA NIM API key to get started",
+      ignoreFocusOut: true,
+      password: true,
+      placeHolder: "nvapi-...",
+    });
+    if (!newKey?.trim()) {
+      if (showMessage) {
+        vscode.window.showErrorMessage(
+          "API key is required to start the proxy.",
+        );
+      }
+      return;
     }
-    return;
+    await context.secrets.store(SECRET_STORAGE_KEY, newKey.trim());
+    // Continue with the newly stored key
+    return tryStartProxy(context, showMessage);
   }
 
   const config = vscode.workspace.getConfiguration("nvidia-nim");
@@ -355,8 +450,8 @@ export async function activate(context: vscode.ExtensionContext) {
   _statusBar = new StatusBarManager();
   context.subscriptions.push(_statusBar);
 
-  // Install CLI globally on activation (background, non-blocking)
-  void ensureCliInstalled(context.extensionPath);
+  // Post-install health check: verify Bun, CLI, and fix any issues (background)
+  void postInstallHealthCheck(context.extensionPath);
 
   // Register all commands — they trigger lazy init on first use
   context.subscriptions.push(

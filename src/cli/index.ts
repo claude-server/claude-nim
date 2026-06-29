@@ -207,41 +207,65 @@ function promptEnterToContinue(prompt: string): Promise<boolean> {
   });
 }
 
+function isValidNimKeyFormat(key: string): boolean {
+  return key.startsWith("nvapi-") && key.length > 10;
+}
+
 async function getOrPromptApiKey(cliArgKey?: string): Promise<string> {
   if (cliArgKey) {
-    // Validate the provided key
-    console.log("\n  Validating API key...");
-    const models = await fetchModels(cliArgKey).catch(() => null);
-    if (models && models.length > 0) {
-      saveApiKey(cliArgKey);
-      console.log("  API key is valid!\n");
-      return cliArgKey;
+    if (!isValidNimKeyFormat(cliArgKey)) {
+      console.error(
+        "\n  Invalid API key format. NVIDIA NIM keys start with 'nvapi-'.",
+      );
+      console.error("  Get your key from: https://build.nvidia.com/\n");
+    } else {
+      // Validate the provided key
+      console.log("\n  Validating API key...");
+      const models = await fetchModels(cliArgKey).catch(() => null);
+      if (models && models.length > 0) {
+        saveApiKey(cliArgKey);
+        console.log("  API key is valid!\n");
+        return cliArgKey;
+      }
+      console.error("  Invalid API key. Please enter a valid NVIDIA NIM key.");
     }
-    console.error("  Invalid API key. Please enter a valid NVIDIA NIM key.");
   }
 
   // Check stored key
   const storedKey = getStoredApiKey();
   if (storedKey) {
-    // Validate stored key
-    const models = await fetchModels(storedKey).catch(() => null);
-    if (models && models.length > 0) {
-      return storedKey;
+    if (!isValidNimKeyFormat(storedKey)) {
+      clearApiKey();
+      console.log("\n  Stored key has invalid format. Please enter a new one.");
+    } else {
+      // Validate stored key
+      const models = await fetchModels(storedKey).catch(() => null);
+      if (models && models.length > 0) {
+        return storedKey;
+      }
+      // Stored key is invalid, clear it and prompt for new one
+      clearApiKey();
+      console.log("\n  Stored API key is invalid. Please enter a new one.");
     }
-    // Stored key is invalid, clear it and prompt for new one
-    clearApiKey();
-    console.log("\n  Stored API key is invalid. Please enter a new one.");
   }
 
   // Prompt for API key
   console.log("\n  No valid NVIDIA NIM API key found.");
-  console.log("  Get your key from: https://build.nvidia.com/\n");
+  console.log("  Get your key from: https://build.nvidia.com/");
+  console.log("  Keys start with 'nvapi-'\n");
 
   for (let attempt = 0; attempt < 3; attempt++) {
     const answer = await promptForInput("  Enter your NVIDIA NIM API key: ");
     if (!answer) {
       console.error("\n  API key is required to start.");
       process.exit(1);
+    }
+
+    if (!isValidNimKeyFormat(answer)) {
+      console.error(
+        `  Invalid format. Key must start with 'nvapi-'. ${attempt < 2 ? "Try again." : "Too many attempts."}`,
+      );
+      continue;
     }
 
     console.log("\n  Validating API key...");

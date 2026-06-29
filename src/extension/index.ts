@@ -365,6 +365,10 @@ function syncModelToClaudeSettings(modelId: string): void {
   }
 }
 
+function isValidNimKey(key: string): boolean {
+  return key.startsWith("nvapi-") && key.length > 10;
+}
+
 async function tryStartProxy(
   context: vscode.ExtensionContext,
   showMessage = false,
@@ -379,12 +383,16 @@ async function tryStartProxy(
   }
 
   const apiKey = await context.secrets.get(SECRET_STORAGE_KEY);
-  if (!apiKey) {
+
+  // Check if key exists and is valid format
+  if (!apiKey || !isValidNimKey(apiKey)) {
     _statusBar?.updateApiKeyStatus(false);
-    // Prompt for API key on first use
+    // Prompt for API key
     const newKey = await vscode.window.showInputBox({
       title: `${PROVIDER_DISPLAY_NAME} API Key`,
-      prompt: "Enter your NVIDIA NIM API key to get started",
+      prompt: apiKey
+        ? "Invalid key format. NVIDIA NIM keys start with 'nvapi-'"
+        : "Enter your NVIDIA NIM API key to get started",
       ignoreFocusOut: true,
       password: true,
       placeHolder: "nvapi-...",
@@ -395,6 +403,12 @@ async function tryStartProxy(
           "API key is required to start the proxy.",
         );
       }
+      return;
+    }
+    if (!isValidNimKey(newKey.trim())) {
+      vscode.window.showErrorMessage(
+        "Invalid key format. NVIDIA NIM keys start with 'nvapi-'.",
+      );
       return;
     }
     await context.secrets.store(SECRET_STORAGE_KEY, newKey.trim());

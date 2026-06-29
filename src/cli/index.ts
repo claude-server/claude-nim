@@ -209,25 +209,56 @@ function promptEnterToContinue(prompt: string): Promise<boolean> {
 
 async function getOrPromptApiKey(cliArgKey?: string): Promise<string> {
   if (cliArgKey) {
-    saveApiKey(cliArgKey);
-    return cliArgKey;
+    // Validate the provided key
+    console.log("\n  Validating API key...");
+    const models = await fetchModels(cliArgKey).catch(() => null);
+    if (models && models.length > 0) {
+      saveApiKey(cliArgKey);
+      console.log("  API key is valid!\n");
+      return cliArgKey;
+    }
+    console.error("  Invalid API key. Please enter a valid NVIDIA NIM key.");
   }
 
+  // Check stored key
   const storedKey = getStoredApiKey();
-  if (storedKey) return storedKey;
-
-  console.log("\nNo NVIDIA NIM API key found.");
-  console.log("Get your key securely from: https://build.nvidia.com/");
-  const answer = await promptForInput("Enter your NVIDIA NIM API key: ");
-
-  if (!answer) {
-    console.error("API key is required to start.");
-    process.exit(1);
+  if (storedKey) {
+    // Validate stored key
+    const models = await fetchModels(storedKey).catch(() => null);
+    if (models && models.length > 0) {
+      return storedKey;
+    }
+    // Stored key is invalid, clear it and prompt for new one
+    clearApiKey();
+    console.log("\n  Stored API key is invalid. Please enter a new one.");
   }
 
-  saveApiKey(answer);
-  console.log(" API key securely encrypted and stored locally.\n");
-  return answer;
+  // Prompt for API key
+  console.log("\n  No valid NVIDIA NIM API key found.");
+  console.log("  Get your key from: https://build.nvidia.com/\n");
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const answer = await promptForInput("  Enter your NVIDIA NIM API key: ");
+    if (!answer) {
+      console.error("\n  API key is required to start.");
+      process.exit(1);
+    }
+
+    console.log("\n  Validating API key...");
+    const models = await fetchModels(answer).catch(() => null);
+    if (models && models.length > 0) {
+      saveApiKey(answer);
+      console.log("  API key is valid and saved!\n");
+      return answer;
+    }
+
+    console.error(
+      `  Invalid API key. ${attempt < 2 ? "Please try again." : "Too many attempts."}`,
+    );
+  }
+
+  console.error("\n  Could not validate API key. Exiting.");
+  process.exit(1);
 }
 
 // ============================================================================

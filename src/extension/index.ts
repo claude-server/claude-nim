@@ -330,14 +330,20 @@ async function postInstallHealthCheck(extensionPath: string): Promise<void> {
       }
 
       // ── Report ─────────────────────────────────────────────────────────
-      if (issues.length === 0) {
+      const unresolved = issues.filter(
+        (i) =>
+          !fixed.some((f) =>
+            f.toLowerCase().includes(i.split(" ")[0].toLowerCase()),
+          ),
+      );
+      if (unresolved.length === 0) {
         vscode.window.showInformationMessage(
-          `Claude-NIM: Successfully installed! ${fixed.length > 0 ? "(" + fixed.join(", ") + ")" : ""}`,
+          `Claude-NIM: Successfully installed!${fixed.length > 0 ? " (" + fixed.join(", ") + ")" : ""}`,
         );
       } else {
         const msg =
           `Claude-NIM install issues:\n` +
-          issues.map((i) => `  - ${i}`).join("\n") +
+          unresolved.map((i) => `  - ${i}`).join("\n") +
           (fixed.length > 0 ? `\nFixed: ${fixed.join(", ")}` : "");
         vscode.window.showWarningMessage(msg);
       }
@@ -374,6 +380,7 @@ async function tryStartProxy(
 
   const apiKey = await context.secrets.get(SECRET_STORAGE_KEY);
   if (!apiKey) {
+    _statusBar?.updateApiKeyStatus(false);
     // Prompt for API key on first use
     const newKey = await vscode.window.showInputBox({
       title: `${PROVIDER_DISPLAY_NAME} API Key`,
@@ -391,9 +398,12 @@ async function tryStartProxy(
       return;
     }
     await context.secrets.store(SECRET_STORAGE_KEY, newKey.trim());
+    _statusBar?.updateApiKeyStatus(true);
     // Continue with the newly stored key
     return tryStartProxy(context, showMessage);
   }
+
+  _statusBar?.updateApiKeyStatus(true);
 
   const config = vscode.workspace.getConfiguration("nvidia-nim");
   const port = config.get<number>("proxyPort", 3456);
@@ -449,6 +459,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
   _statusBar = new StatusBarManager();
   context.subscriptions.push(_statusBar);
+
+  // Check API key status on activation
+  const hasApiKey = !!(await context.secrets.get(SECRET_STORAGE_KEY));
+  _statusBar.updateApiKeyStatus(hasApiKey);
 
   // Post-install health check: verify Bun, CLI, and fix any issues (background)
   void postInstallHealthCheck(context.extensionPath);

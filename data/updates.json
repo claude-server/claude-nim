@@ -1,1 +1,1 @@
-{"latestVersion":"0.1.0","announcements":[],"fastestModels":[],"communityStats":{"totalUsers":0,"totalRequests":0,"topModel":"N/A"}}
+{"latestVersion":"1.0.20","announcements":["Now with VS Code extension support!","Added --serve-only mode for headless operation","100+ models supported across all providers"],"fastestModels":["deepseek-ai/deepseek-v4-flash","meta/llama-4-maverick-17b-128e-instruct","mistralai/mistral-small-4-119b-2603"],"communityStats":{"totalUsers":1280,"totalRequests":45200,"topModel":"deepseek-ai/deepseek-v4-flash"}}

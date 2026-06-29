@@ -114,31 +114,26 @@ export function getMetricsHistory(): RequestMetric[] {
   return ringBuffer.slice(-200);
 }
 
-type ControllerWithHeartbeat = ReadableStreamDefaultController & {
-  __heartbeat?: ReturnType<typeof setInterval>;
-};
-
 export function getMetricsSSEStream(): ReadableStream {
+  let heartbeat: ReturnType<typeof setInterval> | undefined;
   return new ReadableStream({
     start(controller) {
-      const typed = controller as unknown as ControllerWithHeartbeat;
       const encoder = new TextEncoder();
       controller.enqueue(encoder.encode(":ok\n\n"));
       const history = getMetricsHistory();
       for (const m of history) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(m)}\n\n`));
       }
-      typed.__heartbeat = setInterval(() => {
+      heartbeat = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(":heartbeat\n\n"));
         } catch {
-          if (typed.__heartbeat) clearInterval(typed.__heartbeat);
+          if (heartbeat) clearInterval(heartbeat);
         }
       }, 15_000);
     },
-    cancel(controller) {
-      const typed = controller as unknown as ControllerWithHeartbeat;
-      if (typed.__heartbeat) clearInterval(typed.__heartbeat);
+    cancel() {
+      if (heartbeat) clearInterval(heartbeat);
     },
   });
 }

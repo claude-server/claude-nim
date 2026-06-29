@@ -2,7 +2,7 @@
   "name": "claude-nim",
   "displayName": "Claude Code NIM Proxy Server",
   "description": "Use NVIDIA NIM models (DeepSeek, Llama, Qwen, Mistral, 100+) with Claude Code. Translates Anthropic API to OpenAI-compatible format.",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "license": "MIT",
   "author": {
     "name": "Rithika Liyanage",

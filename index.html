@@ -13,127 +13,98 @@
 <meta name="author" content="Rithika Liyanage">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://claude-server.github.io/claude-nim/">
-
-<!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://claude-server.github.io/claude-nim/">
 <meta property="og:title" content="Claude-NIM Proxy — Use Any NIM Model with Claude Code">
 <meta property="og:description" content="Run NVIDIA NIM models through Claude Code. One command, zero config. DeepSeek R1, Llama 4, Qwen 3, and 100+ models.">
-<meta property="og:image" content="images/Banner.jpeg">
-<meta property="og:site_name" content="Claude-NIM Proxy">
-
-<!-- Twitter -->
+<meta property="og:image" content="images/assets/1.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:url" content="https://claude-server.github.io/claude-nim/">
 <meta name="twitter:title" content="Claude-NIM Proxy — Use Any NIM Model with Claude Code">
-<meta name="twitter:description" content="Run NVIDIA NIM models through Claude Code. One command, zero config. DeepSeek R1, Llama 4, Qwen 3, and 100+ models.">
-<meta name="twitter:image" content="images/Banner.jpeg">
-<meta name="twitter:creator" content="@k_rithik04">
-
-<!-- Structured Data -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Claude-NIM Proxy",
-  "description": "Run NVIDIA NIM models through Claude Code. One command, zero config.",
-  "url": "https://github.com/claude-server/claude-nim",
-  "applicationCategory": "DeveloperApplication",
-  "operatingSystem": "VS Code, Windows, macOS, Linux",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "author": {
-    "@type": "Person",
-    "name": "Rithika Liyanage",
-    "url": "https://github.com/k-rithik04"
-  }
-}
-</script>
+<meta name="twitter:description" content="Run NVIDIA NIM models through Claude Code. One command, zero config.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#111;--surface:#1a1a1a;--border:#2a2a2a;--text:#ccc;--dim:#666;--accent:#888;--ok:#4a4;--blue:#68a}
 body{background:var(--bg);color:var(--text);font-family:SF Mono,Menlo,Consolas,monospace;font-size:14px;line-height:1.6}
 a{color:var(--blue);text-decoration:none}
 a:hover{text-decoration:underline}
-.wrap{max-width:860px;margin:0 auto;padding:40px 24px}
-
-/* Hero */
-.hero{text-align:center;padding:48px 0 40px}
+.wrap{max-width:900px;margin:0 auto;padding:40px 24px}
+.hero{text-align:center;padding:48px 0 32px}
 .hero h1{font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.5px;margin-bottom:12px}
-.hero .tagline{font-size:16px;color:var(--dim);max-width:540px;margin:0 auto 32px}
+.hero .tagline{font-size:16px;color:var(--dim);max-width:540px;margin:0 auto 24px}
 .hero .tagline em{color:var(--text);font-style:normal}
-.flow{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:40px;font-size:13px;color:var(--dim)}
-.flow .node{background:var(--surface);border:1px solid var(--border);padding:8px 16px;white-space:nowrap}
+.flow{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px;font-size:13px;color:var(--dim)}
+.flow .node{background:var(--surface);border:1px solid var(--border);padding:8px 16px;white-space:nowrap;transition:border-color .2s,color .2s}
+.flow .node:hover{border-color:var(--accent);color:#fff}
 .flow .arrow{color:var(--accent);padding:0 12px;font-size:16px}
-
-/* Sections */
 section{margin-bottom:48px}
 section h2{font-size:16px;font-weight:600;color:#fff;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 section p{margin-bottom:12px;color:var(--text)}
-
-/* Grid */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
 .card{background:var(--surface);border:1px solid var(--border);padding:16px}
 .card h3{font-size:13px;font-weight:600;color:#fff;margin-bottom:6px}
 .card p{font-size:12px;color:var(--dim);margin:0}
 
-/* Model Picker */
+/* Stats bar */
+.statbar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
+.statbox{background:var(--surface);border:1px solid var(--border);padding:16px;text-align:center}
+.statbox .stat-num{font-size:22px;font-weight:700;color:#fff;margin-bottom:2px}
+.statbox .stat-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px}
+.shimmer{display:inline-block;width:60px;height:20px;background:linear-gradient(90deg,var(--surface),var(--border),var(--surface));background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:2px}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+/* Dashboard */
+.dashboard-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:24px}
+.dash-card{background:var(--surface);border:1px solid var(--border);padding:16px;text-align:center}
+.dash-card .dash-num{font-size:20px;font-weight:700;color:#fff;margin-bottom:2px;font-variant-numeric:tabular-nums}
+.dash-card .dash-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px}
+.dash-card .dash-sub{font-size:11px;color:var(--accent);margin-top:4px}
+
+/* Picker */
 .picker{background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:24px}
 .picker label{display:block;font-size:11px;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
-.picker select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:8px 12px;margin-bottom:12px;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23666' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.picker select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:8px 12px;margin-bottom:12px;outline:none;appearance:none}
 .picker select:focus{border-color:var(--accent)}
 .picker .key-row{display:flex;gap:8px;margin-bottom:12px}
 .picker .key-row input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:12px;padding:6px 10px;outline:none}
 .picker .key-row input:focus{border-color:var(--accent)}
 .picker .key-row button{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:11px;padding:6px 12px;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap}
 .picker .key-row button:hover{border-color:var(--accent)}
+.picker .key-row button:disabled{opacity:.4;cursor:default}
 .picker .hint{font-size:11px;color:var(--dim)}
-
-/* Command Box */
 .cmd-box{background:#0a0a0a;border:1px solid var(--border);padding:16px 20px;position:relative}
 .cmd-box code{font-size:13px;color:#fff;word-break:break-all}
 .cmd-box .copy-btn{position:absolute;top:12px;right:12px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:11px;padding:4px 10px;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px}
 .cmd-box .copy-btn:hover{border-color:var(--accent)}
 .cmd-box .copy-btn.copied{color:var(--ok);border-color:var(--ok)}
-
-/* Runtime Tabs */
 .tabs{display:flex;gap:0;margin-bottom:0;border-bottom:1px solid var(--border)}
 .tab{background:var(--bg);border:1px solid var(--border);border-bottom:none;padding:6px 16px;font-family:inherit;font-size:11px;color:var(--dim);cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;position:relative;top:1px;margin-right:-1px}
 .tab:hover{color:var(--text)}
 .tab.active{background:var(--surface);color:#fff;border-bottom:1px solid var(--surface)}
-.tab-panel{display:none}
-.tab-panel.active{display:block}
 .tab-content{background:var(--surface);border:1px solid var(--border);border-top:none;padding:16px}
-
-/* Steps */
 .steps{counter-reset:step}
 .steps .step{display:flex;gap:16px;margin-bottom:16px;align-items:flex-start}
 .steps .step::before{counter-increment:step;content:counter(step);display:flex;align-items:center;justify-content:center;min-width:28px;height:28px;background:var(--surface);border:1px solid var(--border);font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
 .steps .step .step-body{flex:1}
 .steps .step h4{font-size:13px;font-weight:600;color:#fff;margin-bottom:4px}
 .steps .step p{font-size:12px;color:var(--dim);margin:0}
-
-/* Footer */
 .footer{text-align:center;padding:24px 0;border-top:1px solid var(--border);font-size:12px;color:var(--dim)}
-
-/* Responsive */
-@media(max-width:640px){
-  .grid{grid-template-columns:1fr}
-  .flow{flex-wrap:wrap;gap:4px}
-  .flow .arrow{padding:4px 0}
-  .hero h1{font-size:22px}
-  .picker .key-row{flex-direction:column}
-}
-/* Custom dropdown */
+.tag{display:inline-block;padding:1px 6px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px}
+.tag-ok{color:var(--ok);border:1px solid var(--ok)}
+.tag-na{color:var(--dim);border:1px solid var(--border)}
 #model-list::-webkit-scrollbar{width:4px}
 #model-list::-webkit-scrollbar-track{background:transparent}
 #model-list::-webkit-scrollbar-thumb{background:var(--border)}
-#model-selected:hover{border-color:var(--accent)}
-.model-opt:hover{background:var(--surface)!important}
-.model-opt[data-value=""]{color:var(--dim);font-style:italic}
+@media(max-width:640px){
+  .grid{grid-template-columns:1fr}
+  .statbar{grid-template-columns:1fr 1fr}
+  .dashboard-grid{grid-template-columns:1fr 1fr}
+  .flow{flex-wrap:wrap;gap:4px}
+  .flow .arrow{padding:4px 0;transform:rotate(90deg)}
+  .hero h1{font-size:22px}
+  .picker .key-row{flex-direction:column}
+  .tabs{flex-wrap:wrap}
+  .tab{flex:1;text-align:center;font-size:10px;padding:6px 8px}
+}
 </style>
 </head>
 <body>
@@ -145,19 +116,45 @@ section p{margin-bottom:12px;color:var(--text)}
   <p class="tagline">Run <em>any NVIDIA NIM model</em> through Claude Code. One command, zero config. DeepSeek R1, Llama 4, Qwen 3, and 100+ models.</p>
   <div class="flow">
     <div class="node">Claude Code</div>
-    <div class="arrow">→</div>
+    <div class="arrow" style="transition:transform .3s">→</div>
     <div class="node">Claude-NIM Proxy</div>
     <div class="arrow">→</div>
     <div class="node">NVIDIA NIM API</div>
   </div>
 </div>
 
+<!-- Live GitHub Stats -->
+<div class="statbar" id="gh-stats-shimmer" style="display:none">
+  <div class="statbox"><div class="stat-num"><span class="shimmer"></span></div><div class="stat-label">GitHub Stars</div></div>
+  <div class="statbox"><div class="stat-num"><span class="shimmer"></span></div><div class="stat-label">Forks</div></div>
+  <div class="statbox"><div class="stat-num"><span class="shimmer"></span></div><div class="stat-label">Open Issues</div></div>
+  <div class="statbox"><div class="stat-num"><span class="shimmer"></span></div><div class="stat-label">Latest Release</div></div>
+</div>
+<div class="statbar" id="gh-stats-loaded">
+  <div class="statbox"><div class="stat-num" id="stats-stars">—</div><div class="stat-label">GitHub Stars</div></div>
+  <div class="statbox"><div class="stat-num" id="stats-forks">—</div><div class="stat-label">Forks</div></div>
+  <div class="statbox"><div class="stat-num" id="stats-issues">—</div><div class="stat-label">Open Issues</div></div>
+  <div class="statbox"><div class="stat-num" id="stats-version">—</div><div class="stat-label">Latest Release</div></div>
+</div>
+
+<!-- Community Dashboard (live data) -->
+<section>
+  <h2>Live Community Stats</h2>
+  <div class="dashboard-grid">
+    <div class="dash-card"><div class="dash-num" id="dash-requests">0</div><div class="dash-label">Requests Proxyed</div></div>
+    <div class="dash-card"><div class="dash-num" id="dash-tokens">0</div><div class="dash-label">Tokens Generated</div></div>
+    <div class="dash-card"><div class="dash-num" id="dash-users">0</div><div class="dash-label">Active Users</div></div>
+    <div class="dash-card"><div class="dash-num" style="font-size:14px" id="dash-top-model">—</div><div class="dash-label">Top Model</div></div>
+  </div>
+  <p style="font-size:11px;color:var(--dim);text-align:center">Data sourced from the proxy's telemetry. Updated in real time from <code>data/updates.json</code>.</p>
+</section>
+
 <!-- Model Picker -->
 <section>
   <h2>Get Started</h2>
   <div class="picker">
     <label>1. Choose a Model</label>
-    <input type="text" id="model-search" placeholder="Type to search models..." style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:12px;padding:6px 10px;margin-bottom:8px;outline:none">
+    <input type="text" id="model-search" placeholder="Type to search models (provider, name, or ID)..." style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:12px;padding:6px 10px;margin-bottom:8px;outline:none">
     <div id="model-dropdown" style="position:relative">
       <div id="model-selected" style="background:var(--bg);border:1px solid var(--border);padding:8px 12px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center">
         <span id="model-selected-text">Loading models...</span>
@@ -171,6 +168,18 @@ section p{margin-bottom:12px;color:var(--text)}
       <div class="hint" id="model-count"></div>
     </div>
 
+    <!-- Model Details Panel (shown when a model is selected) -->
+    <div id="model-details" style="display:none;margin-top:12px;padding:12px;background:var(--bg);border:1px solid var(--border)">
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:8px" id="detail-name"></div>
+      <div style="font-size:11px;color:var(--dim);margin-bottom:8px">ID: <span style="color:var(--text)" id="detail-id"></span></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px">
+        <span>Provider: <span style="color:var(--text)" id="detail-provider"></span></span>
+        <span>Context: <span style="color:var(--text)" id="detail-ctx"></span></span>
+        <span>Tools: <span id="detail-tools" class="tag tag-ok">Supported</span></span>
+        <span>Vision: <span id="detail-vision" class="tag tag-na">N/A</span></span>
+      </div>
+    </div>
+
     <label style="margin-top:12px">2. (Optional) Enter your NVIDIA NIM API key to load all 100+ models</label>
     <div class="key-row">
       <input type="password" id="api-key-input" placeholder="nvapi-...">
@@ -180,17 +189,15 @@ section p{margin-bottom:12px;color:var(--text)}
 
     <label style="margin-top:16px">3. Pick your runtime and copy the command</label>
 
-    <!-- Runtime Tabs -->
     <div class="tabs" id="runtime-tabs">
-      <button class="tab active" data-rt="npm">NPM Global (Recommended)</button>
-      <button class="tab" data-rt="npx">npx (Run once)</button>
+      <button class="tab active" data-rt="npm">NPM Global</button>
+      <button class="tab" data-rt="npx">npx</button>
       <button class="tab" data-rt="bun">Bun</button>
-      <button class="tab" data-rt="curl">curl (macOS/Linux)</button>
-      <button class="tab" data-rt="iex">iex (Windows)</button>
-      <button class="tab" data-rt="vscode">VS Code Ext</button>
+      <button class="tab" data-rt="curl">macOS/Linux</button>
+      <button class="tab" data-rt="iex">Windows</button>
+      <button class="tab" data-rt="vscode">VS Code</button>
     </div>
     <div class="tab-content">
-      <!-- Install Command -->
       <div style="margin-bottom:12px">
         <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">&#9312; Default Install &amp; Launch</div>
         <div class="cmd-box">
@@ -199,7 +206,6 @@ section p{margin-bottom:12px;color:var(--text)}
         </div>
         <div style="font-size:11px;color:var(--dim);margin-top:5px" id="install-desc">Installs everything, prompts for your API key on first run, then launches Claude Code</div>
       </div>
-      <!-- Pre-configured Command -->
       <div>
         <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">&#9313; Pre-configured Run (model baked in)</div>
         <div class="cmd-box">
@@ -216,24 +222,9 @@ section p{margin-bottom:12px;color:var(--text)}
 <section>
   <h2>How It Works</h2>
   <div class="steps">
-    <div class="step">
-      <div class="step-body">
-        <h4>Install & Launch</h4>
-        <p>Run the command above. It installs the proxy, asks for your API key (first time), and launches Claude Code with the selected model.</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-body">
-        <h4>Proxy Translates</h4>
-        <p>The proxy runs on localhost and translates Anthropic Messages API calls into OpenAI-compatible requests for NVIDIA NIM.</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-body">
-        <h4>Use Claude Code</h4>
-        <p>Use Claude Code as normal. Switch models anytime with <code>/model &lt;name&gt;</code>. The proxy handles everything.</p>
-      </div>
-    </div>
+    <div class="step"><div class="step-body"><h4>Install & Launch</h4><p>Run the command above. It installs the proxy, asks for your API key (first time), and launches Claude Code with the selected model.</p></div></div>
+    <div class="step"><div class="step-body"><h4>Proxy Translates</h4><p>The proxy runs on localhost and translates Anthropic Messages API calls into OpenAI-compatible requests for NVIDIA NIM.</p></div></div>
+    <div class="step"><div class="step-body"><h4>Use Claude Code</h4><p>Use Claude Code as normal. Switch models anytime with <code>/model &lt;name&gt;</code>. The proxy handles everything.</p></div></div>
   </div>
 </section>
 
@@ -241,37 +232,30 @@ section p{margin-bottom:12px;color:var(--text)}
 <section>
   <h2>Why Claude-NIM Proxy?</h2>
   <div class="grid">
-    <div class="card">
-      <h3>Model-Family Adapters</h3>
-      <p>12 built-in adapters fix per-model quirks (DeepSeek temperature caps, Llama tool_choice, Qwen stop tokens) so you don't have to.</p>
-    </div>
-    <div class="card">
-      <h3>Dynamic Model Switching</h3>
-      <p>Use <code>/model</code> inside Claude Code to switch models on-the-fly. No restart needed.</p>
-    </div>
-    <div class="card">
-      <h3>Web Dashboard</h3>
-      <p>Real-time metrics, request history, token usage, live logs, and model switching — all in your browser.</p>
-    </div>
-    <div class="card">
-      <h3>Zero Dependencies</h3>
-      <p>Single TypeScript file, no Python, no Docker. Just <code>npx claude-nim</code> and you're running.</p>
-    </div>
-    <div class="card">
-      <h3>Security</h3>
-      <p>Prompt injection scrubbing, context pruning, request body limits, encrypted key storage. No other proxy does this.</p>
-    </div>
-    <div class="card">
-      <h3>32 Tests + Stress Test</h3>
-      <p>Full test suite including 100-concurrent-stream stress test. TypeScript with full type safety.</p>
-    </div>
+    <div class="card"><h3>Model-Family Adapters</h3><p>12 built-in adapters fix per-model quirks (DeepSeek temperature caps, Llama tool_choice, Qwen stop tokens) so you don't have to.</p></div>
+    <div class="card"><h3>Dynamic Model Switching</h3><p>Use <code>/model</code> inside Claude Code to switch models on-the-fly. No restart needed.</p></div>
+    <div class="card"><h3>Live Web Dashboard</h3><p>Real-time metrics, request history, token usage, live logs, and model switching — all in your browser at <code>http://localhost:3456</code>.</p></div>
+    <div class="card"><h3>Zero Dependencies</h3><p>Single TypeScript bundle, no Python, no Docker. Just <code>npx claude-nim</code> and you're running.</p></div>
+    <div class="card"><h3>Security First</h3><p>Prompt injection scrubbing, context pruning, request body limits, encrypted key storage. No other proxy does this.</p></div>
+    <div class="card"><h3>104+ Tests</h3><p>Full test suite including proxy units, translation, tool parsing, model catalog, and streaming. TypeScript with full type safety.</p></div>
+  </div>
+</section>
+
+<!-- Screenshots -->
+<section>
+  <h2>In Action</h2>
+  <div class="grid">
+    <div class="card"><h3>Interactive CLI</h3><p><img src="images/assets/1.png" alt="CLI Screenshot" style="width:100%;border:1px solid var(--border);margin-top:8px"></p></div>
+    <div class="card"><h3>Model Selection Menu</h3><p><img src="images/assets/2.png" alt="Model Menu" style="width:100%;border:1px solid var(--border);margin-top:8px"></p></div>
+    <div class="card"><h3>Web Dashboard</h3><p><img src="images/assets/3.png" alt="Dashboard" style="width:100%;border:1px solid var(--border);margin-top:8px"></p></div>
+    <div class="card"><h3>Real-time Metrics</h3><p><img src="images/assets/4.png" alt="Metrics" style="width:100%;border:1px solid var(--border);margin-top:8px"></p></div>
   </div>
 </section>
 
 <!-- VS Code Extension -->
 <section>
   <h2>VS Code Extension</h2>
-  <p>Prefer VS Code? Install the extension from the marketplace for status bar controls, model browsing, one-click launch, and encrypted API key storage.</p>
+  <p>Prefer VS Code? Install the extension from the marketplace for status bar controls, model browsing, one-click launch, and encrypted API key storage. The proxy runs in the background as a child process.</p>
   <div class="cmd-box">
     <code>ext install k-rithik04.claude-nim</code>
     <button class="copy-btn" onclick="copyText('ext install k-rithik04.claude-nim',this)">Copy</button>
@@ -282,28 +266,15 @@ section p{margin-bottom:12px;color:var(--text)}
 <section>
   <h2>Links</h2>
   <div class="grid">
-    <div class="card">
-      <h3>GitHub</h3>
-      <p><a href="https://github.com/claude-server/claude-nim">github.com/claude-server/claude-nim</a></p>
-    </div>
-    <div class="card">
-      <h3>NVIDIA NIM</h3>
-      <p><a href="https://build.nvidia.com">build.nvidia.com</a></p>
-    </div>
-    <div class="card">
-      <h3>Claude Code</h3>
-      <p><a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code Docs</a></p>
-    </div>
-    <div class="card">
-      <h3>License</h3>
-      <p>MIT</p>
-    </div>
+    <div class="card"><h3>GitHub</h3><p><a href="https://github.com/claude-server/claude-nim">github.com/claude-server/claude-nim</a></p></div>
+    <div class="card"><h3>NVIDIA NIM</h3><p><a href="https://build.nvidia.com">build.nvidia.com</a></p></div>
+    <div class="card"><h3>Claude Code</h3><p><a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code Docs</a></p></div>
+    <div class="card"><h3>VS Code Marketplace</h3><p><a href="https://marketplace.visualstudio.com/items?itemName=k-rithik04.claude-nim">k-rithik04.claude-nim</a></p></div>
   </div>
 </section>
 
-<div class="footer">Claude-NIM Proxy &mdash; MIT License</div>
+<div class="footer">Claude-NIM Proxy &mdash; MIT License &mdash; <a href="https://github.com/claude-server/claude-nim">GitHub</a> &mdash; <a href="https://github.com/claude-server/claude-nim/issues">Report Issue</a></div>
 </div>
-
 <script src="index.js"></script>
 </body>
 </html>

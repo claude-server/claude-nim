@@ -7,56 +7,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Claude-NIM Proxy</title>
+<title>Claude-NIM Proxy Dashboard</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#111;--surface:#1a1a1a;--border:#2a2a2a;--text:#ccc;--dim:#666;--accent:#888;--ok:#4a4;--err:#a44;--blue:#68a}
+:root{--bg:#111;--surface:#1a1a1a;--border:#2a2a2a;--text:#ccc;--dim:#666;--accent:#888;--ok:#4a4;--err:#a44;--blue:#68a;--warn:#aa4}
 body{background:var(--bg);color:var(--text);font-family:SF Mono,Menlo,Consolas,monospace;font-size:13px;line-height:1.5}
 .wrap{max-width:1200px;margin:0 auto;padding:16px}
-h1{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;letter-spacing:0.5px}
-/* Header */
-.hdr{display:flex;align-items:center;gap:24px;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:16px}
-.icon{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--dim)}
+h1{font-size:14px;font-weight:600;color:var(--text);margin-bottom:0;letter-spacing:0.5px}
+.flx{display:flex;align-items:center;gap:24px;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:16px}
+.icon{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--dim)}
 .icon svg{width:32px;height:32px;stroke:var(--dim);fill:none;stroke-width:1.5}
 .conn{flex:1;display:flex;align-items:center;justify-content:center;gap:0}
 .conn-line{height:2px;flex:1;max-width:120px;background:var(--border);position:relative}
 .conn-dot{width:6px;height:6px;border-radius:50%;position:absolute;top:-2px;background:var(--accent);opacity:0}
 .conn.active .conn-dot{animation:flow 1.2s ease-in-out}
 @keyframes flow{0%{left:0;opacity:1}100%{left:calc(100% - 6px);opacity:1}}
-/* Stats */
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
 .stat{background:var(--surface);border:1px solid var(--border);padding:10px 12px;text-align:center}
 .stat-val{font-size:20px;font-weight:600;color:var(--text)}
 .stat-lbl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
-/* Controls */
-.ctrl{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
-.ctrl label{font-size:11px;color:var(--dim);text-transform:uppercase}
-.ctrl select,.ctrl input[type=text],.ctrl input[type=password]{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:12px;padding:6px 10px;outline:none}
+.bar-wrap{background:var(--surface);border:1px solid var(--border);padding:12px;margin-bottom:12px}
+.bar-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.bar-label{font-size:10px;color:var(--dim);text-transform:uppercase}
+.bar-val{font-size:11px;color:var(--text)}
+.bar-track{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .5s ease}
+.ctrl{display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);padding:10px 12px}
+.ctrl label{font-size:10px;color:var(--dim);text-transform:uppercase}
+.ctrl select,.ctrl input[type=text],.ctrl input[type=password]{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:12px;padding:5px 8px;outline:none}
 .ctrl select:focus,.ctrl input:focus{border-color:var(--accent)}
 .ctrl select{min-width:200px}
-.ctrl button{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:11px;padding:6px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px}
+.ctrl button{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:10px;padding:5px 10px;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px}
 .ctrl button:hover{border-color:var(--accent)}
-/* Tables */
-.tbl-wrap{margin-bottom:16px;border:1px solid var(--border)}
+.ctrl button:disabled{opacity:.4;cursor:default}
+.tbl-wrap{margin-bottom:12px;border:1px solid var(--border)}
 .tbl-hdr{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border);font-size:11px;color:var(--dim);text-transform:uppercase}
-.tbl{max-height:240px;overflow-y:auto}
+.tbl{max-height:200px;overflow-y:auto}
 .tbl table{width:100%;border-collapse:collapse}
-.tbl th,.tbl td{padding:4px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl th,.tbl td{padding:4px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
 .tbl th{font-size:10px;color:var(--dim);text-transform:uppercase;position:sticky;top:0;background:var(--surface)}
-.tbl td{font-size:12px}
+.tbl td{font-size:11px}
 .tbl tr:hover{background:#1e1e1e}
 .tbl .ok{color:var(--ok)}
 .tbl .err{color:var(--err)}
-/* Logs */
-.logs{max-height:180px;overflow-y:auto;font-size:11px;padding:8px 12px;background:#0a0a0a;border:1px solid var(--border)}
-.logs .line{padding:1px 0;opacity:0;animation:fadeIn 0.3s forwards}
+.logs{max-height:150px;overflow-y:auto;font-size:10px;padding:6px 10px;background:#0a0a0a;border:1px solid var(--border)}
+.logs .line{padding:1px 0;opacity:0;animation:fadeIn .3s forwards}
 .logs .line .ts{color:var(--dim)}
 .logs .line.info{color:var(--blue)}
 .logs .line.ok{color:var(--ok)}
 .logs .line.err{color:var(--err)}
-.logs .line.warn{color:#aa4}
+.logs .line.warn{color:var(--warn)}
 @keyframes fadeIn{to{opacity:1}}
-/* Scrollbar */
+.tag{display:inline-block;padding:1px 5px;font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.tag-ok{color:var(--ok);border:1px solid var(--ok)}
+.tag-na{color:var(--dim);border:1px solid var(--border)}
+#model-detail{display:none;margin-top:8px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);font-size:11px;line-height:1.8}
+#model-detail .lbl{color:var(--dim)}
+#model-detail .val{color:var(--text)}
+#model-detail .gap{display:inline-block;width:16px}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border)}
@@ -64,39 +72,36 @@ h1{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;letter-sp
 </head>
 <body>
 <div class="wrap">
-  <h1>Claude-NIM Proxy Dashboard</h1>
-
-  <!-- Active Model Status -->
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);font-size:12px">
-    <span style="color:var(--dim);text-transform:uppercase;font-size:10px">Active Model</span>
-    <span id="active-model" style="color:var(--text);font-weight:600">loading...</span>
+  <div class="flx">
+    <h1>Claude-NIM Proxy Dashboard</h1>
     <span style="flex:1"></span>
     <span id="conn-status" style="color:var(--dim);font-size:11px">Connecting...</span>
   </div>
 
-  <!-- Header with icons -->
-  <div class="hdr">
+  <!-- Flow diagram with active model -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);font-size:12px">
+    <span style="color:var(--dim);text-transform:uppercase;font-size:10px">Active Model</span>
+    <span id="active-model" style="color:var(--text);font-weight:600">loading...</span>
+  </div>
+
+  <div class="flx" style="padding-top:0;border-bottom:none;margin-bottom:12px">
     <div class="icon">
       <svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="4"/><text x="16" y="21" text-anchor="middle" font-size="12" fill="currentColor" stroke="none" font-weight="bold">CC</text></svg>
       <span>Claude Code</span>
     </div>
-    <div class="conn" id="conn-left">
-      <div class="conn-line"><div class="conn-dot"></div></div>
-    </div>
+    <div class="conn" id="conn-left"><div class="conn-line"><div class="conn-dot"></div></div></div>
     <div class="icon">
       <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="12"/><path d="M10 16h12M16 10v12" stroke-width="1.5"/></svg>
       <span>Proxy</span>
     </div>
-    <div class="conn" id="conn-right">
-      <div class="conn-line"><div class="conn-dot"></div></div>
-    </div>
+    <div class="conn" id="conn-right"><div class="conn-line"><div class="conn-dot"></div></div></div>
     <div class="icon">
       <svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="4"/><text x="16" y="21" text-anchor="middle" font-size="12" fill="currentColor" stroke="none" font-weight="bold">N</text></svg>
       <span>NVIDIA NIM</span>
     </div>
   </div>
 
-  <!-- Stats -->
+  <!-- Session Stats -->
   <div class="stats">
     <div class="stat"><div class="stat-val" id="s-req">0</div><div class="stat-lbl">Requests</div></div>
     <div class="stat"><div class="stat-val" id="s-tok">0</div><div class="stat-lbl">Tokens</div></div>
@@ -105,11 +110,20 @@ h1{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;letter-sp
     <div class="stat"><div class="stat-val" id="s-up">0:00</div><div class="stat-lbl">Uptime</div></div>
   </div>
 
+  <!-- Context Window Usage Bar -->
+  <div class="bar-wrap">
+    <div class="bar-row">
+      <span class="bar-label">Context Window Usage (session)</span>
+      <span class="bar-val"><span id="ctx-label">0 tokens used</span></span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="ctx-bar" style="width:0%"></div></div>
+  </div>
+
   <!-- Controls -->
   <div class="ctrl">
     <div>
       <label>Model</label><br>
-      <select id="sel-model"><option value="">Loading models...</option></select>
+      <select id="sel-model" onchange="showModelDetail()"><option value="">Loading models...</option></select>
       <button id="btn-apply">Apply</button>
     </div>
     <div>
@@ -117,7 +131,15 @@ h1{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;letter-sp
       <input type="password" id="inp-key" placeholder="nvapi-..." size="30">
       <button id="btn-key">Update</button>
     </div>
+    <div>
+      <label style="visibility:hidden">.</label><br>
+      <button id="btn-clear">Clear</button>
+      <button id="btn-export">Export</button>
+    </div>
   </div>
+
+  <!-- Model Details Panel -->
+  <div id="model-detail"></div>
 
   <!-- Request History -->
   <div class="tbl-wrap">

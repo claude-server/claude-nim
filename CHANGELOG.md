@@ -7,6 +7,15 @@
 
 All notable changes to the Claude-NIM Proxy extension will be documented in this file.
 
+## [1.0.20] - 2026-06-29
+
+### Fixed
+- ReadableStream `cancel()` no longer crashes with `TypeError: undefined is not an object` when the stream is cancelled without a reason argument — now uses closure variable directly instead of accessing `reason.__heartbeat`
+- Removed unused `ControllerWithHeartbeat` type from dashboard
+
+### Changed
+- Added `.prettierrc` with explicit `printWidth: 80` config for deterministic CI formatting
+
 ## [1.0.19] - 2026-06-29
 
 ### Added

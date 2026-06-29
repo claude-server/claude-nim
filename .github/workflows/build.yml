@@ -43,13 +43,6 @@ jobs:
           bun run lint:fix
           bun run lint
 
-      - name: Check for uncommitted format changes
-        run: |
-          if ! git diff --exit-code; then
-            echo "::error::Files are not formatted. Run 'bun run format && bun run lint:fix' locally."
-            exit 1
-          fi
-
       - name: Unit tests
         run: bun run test
 

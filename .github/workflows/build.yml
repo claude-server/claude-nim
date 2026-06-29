@@ -19,37 +19,34 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
+          node-version: 20
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
-      - name: Compile TypeScript
-        run: npm run compile
+      - name: Compile
+        run: bun run compile
 
       - name: Lint
-        run: npm run lint
+        run: bun run lint
 
       - name: Unit tests
-        run: npm test
+        run: bun run test
 
       - name: Package VSIX
-        if: matrix.node-version == 20
-        run: npm run package:vsix
+        run: bun run package:vsix
 
       - name: Upload VSIX artifact
-        if: matrix.node-version == 20
         uses: actions/upload-artifact@v4
         with:
           name: claude-nim-proxy
